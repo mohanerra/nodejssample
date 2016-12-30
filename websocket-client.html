@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+  <meta charset="utf-8" />
+  <title>WebSocket Test</title>
+  <script language="javascript" type="text/javascript">
+
+  var wsUri = "ws://localhost:3000/";
+  var output;
+  var queryURL = "https://www.google.com/#safe=active&q=";
+
+  function init()
+  {
+    output = document.getElementById("output");
+    testWebSocket();
+  }
+
+  function testWebSocket()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+
+  function onOpen(evt)
+  {
+    writeToScreen("CONNECTED");
+    doSend("WebSocket rocks");
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+  }
+
+  function onMessage(evt)
+  {
+    var outputURL = queryURL + evt.data.replace(/\ /g, "+");
+    writeToScreen('<span style="color: blue;">RESPONSE: ' + outputURL+'</span>');
+    loadDoc(outputURL);
+    //websocket.close();
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    writeToScreen("SENT: " + message);
+    websocket.send(message);
+  }
+
+  function writeToScreen(message)
+  {
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+  }
+
+  window.addEventListener("load", init, false);
+
+function loadDoc(qURL) {
+  alert("inside loadDoc with url: www.google.com");
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    alert("inside ajax function");
+    if (this.readyState == 4 && this.status == 200) {
+        alert("setting the queryOutput div");
+        document.getElementById("queryOutput").innerHTML = this.responseText;
+    }
+  };
+  alert("before calling ajax");
+  xhttp.open("GET", "/query", true);
+  xhttp.send();
+  alert("after calling ajax");
+}      
+  </script>
+
+  <h2>WebSocket Test</h2>
+
+  <div id="output"></div>
+
+<div id="queryOutput"></div>
