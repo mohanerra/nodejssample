@@ -38,7 +38,10 @@
   function onMessage(evt)
   {
     var outputURL = queryURL + evt.data.replace(/\ /g, "+");
-    writeToScreen('<span style="color: blue;">RESPONSE: ' + outputURL+'</span>');
+    writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>');
+    if (evt.data.indexOf("WebSocket rocks")!=-1){
+        return;
+    }
     if(win === undefined){
         win = loadWindow(outputURL);
     } else {
