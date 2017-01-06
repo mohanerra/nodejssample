@@ -12,9 +12,10 @@ var httpToWSBridge = null;
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req, res){
-  console.log('get route', req.testing);
-  res.end("received request");
+  console.log('received request ', req.url);
+  console.log('sending these to websocket ', req.query.words);
   httpToWSBridge.send(req.query.words);
+  res.end("received request");    
 });
 
 app.get('/query', function(req, res){
