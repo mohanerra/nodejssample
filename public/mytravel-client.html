@@ -1,6 +1,6 @@
 <!DOCTYPE html>
   <meta charset="utf-8" />
-  <title>WebSocket Test</title>
+  <title>My Travel</title>
   <script language="javascript" type="text/javascript">
 
   var wsUri = "ws://localhost:3000/";
@@ -27,7 +27,7 @@
   function onOpen(evt)
   {
     writeToScreen("CONNECTED");
-    doSend("WebSocket rocks");
+    doSend("Client connection initiated");
   }
 
   function onClose(evt)
@@ -39,7 +39,7 @@
   {
     var outputURL = queryURL + evt.data.replace(/\ /g, "+");
     writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>');
-    if (evt.data.indexOf("WebSocket rocks")!=-1){
+    if (evt.data.indexOf("Client connection")!=-1){
         return;
     }
     
@@ -78,19 +78,14 @@
   window.addEventListener("load", init, false);
 
 function loadDoc(qURL) {
-  alert("inside loadDoc with url: " + qURL);
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
-    alert("inside ajax function");
     if (this.readyState == 4 && this.status == 200) {
-        alert("setting the queryOutput div");
         document.getElementById("queryOutput").innerHTML = this.responseText;
     }
   };
-  alert("before calling ajax");
   xhttp.open("GET", qURL, true);
   xhttp.send();
-  alert("after calling ajax");
 }  
       
 function loadWindow(qURL) {
@@ -100,7 +95,7 @@ function loadWindow(qURL) {
       
   </script>
 
-  <h2>WebSocket Test</h2>
+  <h2>My Travel</h2>
 
   <div id="output"></div>
 

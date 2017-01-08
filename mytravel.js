@@ -30,7 +30,8 @@ app.get('/query', function(req, res){
   var loginResponse = {};
   var requestCookies = "";
   var getMyTripsResponse = function(body,res) {
-    res.end(body);    
+      var output = "<html><head><link rel='stylesheet' href='https://travel.americanexpress.com/ctnwt/assets/trips/styles/mytrips-min.css?q=-2059341902' type='text/css' /><link media='all' type='text/css' href='https://www.aexp-static.com/nav/ngn/css/inav_responsive.css' rel='stylesheet' /><link media='all' type='text/css' href='https://www.aexp-static.com/nav/ngn/css/inav_travel.css' rel='stylesheet' /><script language='javascript' type='text/javascript'>alert('Hi');</script><title>My Trips</title><body><div id='tripsResponse' style='display:block'>" + body + "</div></body></html>";
+      res.end(output);    
   };
 
   var getLoginResponse = function (body,cookies,res) {
@@ -99,10 +100,12 @@ function loginToTravel(words,res,callback) {
     console.log("sending login request with optionss: " + postOptions);
     var post_req = https.request(postOptions, function (response) {
         response.setEncoding('utf8');
+        var resBody = "";
         response.on('data', function (chunk) {
-            loginResponse = JSON.parse(JSON.stringify(chunk));
-            console.log('Response: ' + loginResponse);
+            //loginResponse = JSON.parse(JSON.stringify(chunk));
+            //console.log('Response: ' + loginResponse);
             //res.end("response: " + loginResponse);
+            resBody += chunk; 
             var responseCookies = response.headers['set-cookie'];
             for(var i=0; i<responseCookies.length; i++){
                 var oneCookie = responseCookies[i];
@@ -110,8 +113,20 @@ function loginToTravel(words,res,callback) {
                 requestCookies= requestCookies + oneCookie[0]+';';
             }
             console.log("cookies from response: " + requestCookies);
-            callback(loginResponse,requestCookies,res);
+            
       });
+        response.on('end', function(){
+            console.log("### resBody: " + resBody);
+            console.log("resBody isJson: " + isJson(resBody));
+            loginResponse = JSON.parse(resBody);
+            console.log('### LoginResponse: ' + loginResponse);
+            if(isJson(loginResponse)){
+                console.log("#### loginResponse is a Json ####");
+            } else {
+                console.log("#### loginResponse is NOT a Json ####");
+            }
+            callback(loginResponse,requestCookies,res);
+        });
     });
     
     post_req.write(post_logindata);
@@ -123,24 +138,34 @@ function queryMyTravel(loginResponse, requestCookies, res, callback) {
     var myTripsResponse = "";
     
     //query myTrips
-    var post_reqdata = querystring.stringify(loginResponse.encryptedCardsList);
+    var post_reqdata = JSON.stringify(loginResponse.encryptedCardsList);
+    console.log("post_reqdata: " + post_reqdata);
     
+    //'Content-Type': 'application/json',
+    //    'Content-Length': Buffer.byteLength(post_reqdata),
     requestHeaders = {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(post_reqdata),
+        'Content-Type': 'text/html',
         'Cookie': requestCookies
     };
     
     postOptions = {
         host : 'travel.americanexpress.com',
         port : 443,
-        path : '/travel/customers/'+loginResponse.tpGuid+'?securityToken='+loginResponse.secToken,
+        path : '/travel/customers/'+loginResponse.tpGuid+'/trips?securityToken='+loginResponse.secToken,
         method : 'POST',
         headers: requestHeaders
-    };  
+    }; 
     
-    console.log("sending post request with optionss: " + postOptions);
-    console.log("sending post request to URI: " + postOptions.path);
+    getOptions = {
+        host : 'travel.americanexpress.com',
+        port : 443,
+        path : '/my-trips?inav=travel_mytrips_gem',
+        method : 'GET',
+        headers: requestHeaders        
+    };
+    
+    console.log("sending get request with optionss: " + JSON.stringify(getOptions));
+    console.log("sending post request to URI: " + getOptions.path);
     post_req = https.request(postOptions, function (response) {
         response.setEncoding('utf8');
         response.on('data', function (chunk) {
@@ -150,9 +175,26 @@ function queryMyTravel(loginResponse, requestCookies, res, callback) {
       });
     });
     
-    post_req.write(post_reqdata);
-    post_req.end();
+    //post_req.write(post_reqdata);
+    //post_req.end();
     
-    
+    var getReq = https.request(getOptions, function(response) {
+        var resBody = "";
+        response.on('data', function(chunk){
+            resBody += chunk;    
+        });
+        
+        response.on('end', function(){
+            myTripsResponse = resBody;
+            callback(myTripsResponse,res);
+        });
+    });
+    getReq.end();
     return output;
+}
+
+function isJson(obj) {
+    var t = typeof obj;
+    console.log("##### Inside isJson. typeof val: " + t);
+    return ['boolean', 'number', 'string', 'symbol', 'function'].indexOf(t) == -1;
 }
