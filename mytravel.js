@@ -4,7 +4,10 @@ var querystring = require('querystring');
 var https = require('https');
 var expressWs = require('express-ws')(app);
 var request = require('request');
+var bodyParser = require('body-parser');
 var httpToWSBridge = null;
+var todos = [];
+var todoItems = {};
 
 //app.use(function (req, res, next) {
 //  console.log('middleware');
@@ -12,6 +15,8 @@ var httpToWSBridge = null;
 //  return next();
 //});
 app.use(express.static(__dirname + '/public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.get('/', function(req, res){
   console.log('received request ', req.url);
@@ -47,10 +52,30 @@ app.get('/query', function(req, res){
       queryMyTravel(loginResponse,requestCookies,res,getMyTripsResponse);
   };
     
-  
-  loginToTravel(req.query.q,res,getLoginResponse);
+  if(req.query.q.indexOf("todo")!=-1){
+    console.log("received inquiry for todo");  
+    todoItems.items = todos;
+    res.end(JSON.stringify(todoItems));
+  } else {
+    loginToTravel(req.query.q,res,getLoginResponse);
+  }
   //res.end(loginResponse);
 });
+
+app.post("/todo", function(request,response){
+   var actionItem = request.body.actionItem; 
+   console.log("Received actionItem: " + actionItem);
+   todos.push(actionItem);
+   console.log("Todo Items: " + todos.toString());
+   response.end(todos.toString());
+});
+
+app.get("/todo", function(request,response){
+   todoItems.items = todos;
+   console.log("Todo Items: " + JSON.stringify(todoItems));
+   response.end(JSON.stringify(todoItems));
+});
+
 
 app.ws('/', function(ws, req) {
     httpToWSBridge = ws;
